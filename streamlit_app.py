@@ -3,151 +3,186 @@ from pathlib import Path
 import streamlit as st
 import numpy as np
 
-# Page configuration
+# 1. Page Configuration
 st.set_page_config(
     page_title="MT2KD Audio Studio",
     page_icon="🎙️",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed"
 )
 
-# --- Premium Dark Glassmorphic Styling (matching the React UI) ---
+# 2. Comprehensive High-Contrast Dark Glassmorphism Styling
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
 
-    html, body, [class*="css"] {
-        font-family: 'Plus Jakarta Sans', sans-serif;
-    }
-    
-    /* Main Background */
-    .stApp {
-        background: radial-gradient(circle at 50% 0%, #0f172a 0%, #020617 100%) !important;
+    /* Global Typography & Deep Dark Background */
+    html, body, [class*="css"], .stApp {
+        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif !important;
+        background-color: #030712 !important;
         color: #f8fafc !important;
     }
-
-    /* Sidebar Styling */
-    [data-testid="stSidebar"] {
-        background: #020617 !important;
-        border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+    
+    /* Top Header Bar */
+    header[data-testid="stHeader"] {
+        background: rgba(3, 7, 18, 0.8) !important;
+        backdrop-filter: blur(12px) !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
     }
 
-    /* Glass Cards */
-    .glass-card {
+    /* Gradient Title */
+    .title-gradient {
+        background: linear-gradient(135deg, #38bdf8 0%, #818cf8 50%, #c084fc 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-size: 2.3rem;
+        font-weight: 800;
+        letter-spacing: -0.03em;
+        margin-bottom: 6px;
+    }
+
+    /* Subtitle & Badges */
+    .subtitle-text {
+        color: #94a3b8;
+        font-size: 1.05rem;
+        margin-bottom: 24px;
+        line-height: 1.5;
+    }
+
+    .pill-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 12px;
+        border-radius: 9999px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        background: rgba(56, 189, 248, 0.12);
+        color: #38bdf8;
+        border: 1px solid rgba(56, 189, 248, 0.3);
+    }
+
+    .pill-badge-green {
+        background: rgba(34, 197, 94, 0.12);
+        color: #4ade80;
+        border: 1px solid rgba(34, 197, 94, 0.3);
+    }
+
+    /* Prominent, High-Contrast Tabs */
+    .stTabs [data-baseweb="tab-list"] {
+        background: #0f172a !important;
+        border: 1px solid rgba(255, 255, 255, 0.12) !important;
+        border-radius: 16px !important;
+        padding: 6px !important;
+        gap: 8px !important;
+        margin-bottom: 20px !important;
+    }
+
+    .stTabs [data-baseweb="tab"] {
+        height: 52px !important;
+        border-radius: 12px !important;
+        padding: 0 24px !important;
+        font-weight: 700 !important;
+        font-size: 1.05rem !important;
+        color: #cbd5e1 !important; /* High contrast bright text */
+        border: none !important;
+        background: transparent !important;
+        transition: all 0.2s ease !important;
+    }
+
+    .stTabs [data-baseweb="tab"]:hover {
+        background: rgba(56, 189, 248, 0.1) !important;
+        color: #38bdf8 !important;
+    }
+
+    .stTabs [aria-selected="true"] {
+        background: linear-gradient(135deg, #0284c7 0%, #4f46e5 100%) !important;
+        color: #ffffff !important;
+        box-shadow: 0 4px 16px rgba(2, 132, 199, 0.45) !important;
+    }
+
+    /* Glass Panels */
+    .glass-panel {
         background: rgba(15, 23, 42, 0.65);
         backdrop-filter: blur(16px);
         -webkit-backdrop-filter: blur(16px);
         border: 1px solid rgba(255, 255, 255, 0.08);
         border-radius: 18px;
         padding: 24px;
-        margin-bottom: 20px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-    }
-    
-    .glass-card-highlight {
-        background: linear-gradient(135deg, rgba(56, 189, 248, 0.08) 0%, rgba(129, 140, 248, 0.08) 100%);
-        border: 1px solid rgba(56, 189, 248, 0.25);
+        margin-bottom: 24px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
     }
 
-    /* Gradient Headers */
-    .grad-title {
-        background: linear-gradient(135deg, #38bdf8 0%, #818cf8 50%, #c084fc 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        font-weight: 800;
-        font-size: 2.2rem;
-        letter-spacing: -0.02em;
-    }
-
-    .badge-pill {
-        display: inline-block;
-        padding: 4px 12px;
-        border-radius: 9999px;
-        font-size: 0.75rem;
-        font-weight: 600;
-        letter-spacing: 0.05em;
-        text-transform: uppercase;
-        background: rgba(56, 189, 248, 0.15);
-        color: #38bdf8;
-        border: 1px solid rgba(56, 189, 248, 0.3);
-    }
-
-    .badge-success {
-        background: rgba(34, 197, 94, 0.15);
-        color: #4ade80;
-        border: 1px solid rgba(34, 197, 94, 0.3);
-    }
-
-    .badge-danger {
-        background: rgba(239, 68, 68, 0.15);
-        color: #f87171;
-        border: 1px solid rgba(239, 68, 68, 0.3);
-    }
-
-    /* Tabs Styling */
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 8px;
-        background: rgba(15, 23, 42, 0.8);
-        padding: 8px;
-        border-radius: 14px;
-        border: 1px solid rgba(255, 255, 255, 0.08);
-    }
-
-    .stTabs [data-baseweb="tab"] {
-        height: 48px;
-        border-radius: 10px;
-        padding: 0 20px;
-        font-weight: 600;
-        color: #94a3b8;
-        border: none;
-    }
-
-    .stTabs [aria-selected="true"] {
-        background: linear-gradient(135deg, #0284c7 0%, #4f46e5 100%) !important;
-        color: #ffffff !important;
-        box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35);
-    }
-
-    /* Buttons */
-    .stButton>button {
-        background: linear-gradient(135deg, #0284c7 0%, #6366f1 100%) !important;
-        color: white !important;
-        font-weight: 600 !important;
-        border: none !important;
-        border-radius: 12px !important;
-        padding: 12px 24px !important;
-        transition: all 0.2s ease !important;
-        box-shadow: 0 4px 14px rgba(2, 132, 199, 0.25) !important;
-    }
-    
-    .stButton>button:hover {
-        transform: translateY(-1px) !important;
-        box-shadow: 0 6px 20px rgba(2, 132, 199, 0.45) !important;
-    }
-
-    /* File Uploader */
+    /* File Uploader Dark Fix */
     [data-testid="stFileUploader"] {
-        background: rgba(15, 23, 42, 0.5) !important;
+        background: rgba(15, 23, 42, 0.45) !important;
         border: 1px dashed rgba(56, 189, 248, 0.35) !important;
         border-radius: 16px !important;
-        padding: 16px !important;
+        padding: 18px !important;
+    }
+    
+    [data-testid="stFileUploader"] section {
+        background: transparent !important;
+    }
+    
+    [data-testid="stFileUploader"] span, [data-testid="stFileUploader"] small {
+        color: #94a3b8 !important;
     }
 
-    /* Code/Transcript Output */
-    .transcript-box {
-        background: rgba(2, 6, 23, 0.8);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 14px;
-        padding: 18px;
-        font-size: 1.05rem;
-        color: #f1f5f9;
-        line-height: 1.6;
+    /* Action Buttons */
+    .stButton>button {
+        background: linear-gradient(135deg, #0284c7 0%, #6366f1 100%) !important;
+        color: #ffffff !important;
+        font-weight: 700 !important;
+        font-size: 1.05rem !important;
+        border: none !important;
+        border-radius: 14px !important;
+        padding: 14px 28px !important;
+        box-shadow: 0 4px 16px rgba(2, 132, 199, 0.3) !important;
+        transition: all 0.2s ease !important;
+    }
+
+    .stButton>button:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 8px 24px rgba(2, 132, 199, 0.5) !important;
+    }
+
+    /* Monospace Transcript Result Card */
+    .transcript-card {
+        background: rgba(2, 6, 23, 0.9);
+        border: 1px solid rgba(56, 189, 248, 0.3);
+        border-radius: 16px;
+        padding: 20px;
         font-family: 'JetBrains Mono', monospace;
+        font-size: 1.15rem;
+        line-height: 1.7;
+        color: #f1f5f9;
+        margin-top: 16px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Success / Error Banners */
+    .banner-match {
+        background: linear-gradient(135deg, rgba(34, 197, 94, 0.12) 0%, rgba(16, 185, 129, 0.12) 100%);
+        border: 1px solid rgba(34, 197, 94, 0.4);
+        border-radius: 16px;
+        padding: 20px;
+        margin-top: 16px;
+    }
+
+    .banner-nonmatch {
+        background: linear-gradient(135deg, rgba(239, 68, 68, 0.12) 0%, rgba(220, 38, 38, 0.12) 100%);
+        border: 1px solid rgba(239, 68, 68, 0.4);
+        border-radius: 16px;
+        padding: 20px;
+        margin-top: 16px;
     }
 </style>
 """, unsafe_allow_html=True)
 
-# Load Engine
+# 3. Model Engine Loader
 @st.cache_resource
 def load_engine():
     from model_engine import MT2KDEngine
@@ -161,212 +196,157 @@ with st.spinner("Connecting to MT2KD Conformer Engine..."):
         st.error(f"Failed to load model: {e}")
         st.stop()
 
-# --- Sidebar Navigation (matching the React frontend pages) ---
-with st.sidebar:
-    st.markdown('<p class="badge-pill">MT2KD Audio Studio</p>', unsafe_allow_html=True)
-    st.markdown("### 🎙️ Navigation")
-    page = st.radio(
-        "Go to page:",
-        [
-            "🎧 Multi-Task Audio Studio",
-            "📊 Dashboard & Metrics",
-            "📈 Performance & Benchmarks",
-            "🔬 Model Architecture & About"
-        ],
-        label_visibility="collapsed"
-    )
+# 4. Header Bar
+col_h1, col_h2 = st.columns([4, 1])
+with col_h1:
+    st.markdown('<h1 class="title-gradient">MT2KD Audio Intelligence Studio</h1>', unsafe_allow_html=True)
+    st.markdown('<p class="subtitle-text">Unified multi-task model jointly performing Speech Recognition, Sound Event Classification, and Speaker Verification.</p>', unsafe_allow_html=True)
+with col_h2:
+    st.markdown('<br>', unsafe_allow_html=True)
+    st.markdown('<span class="pill-badge pill-badge-green">● 19.0M Conformer · Online</span>', unsafe_allow_html=True)
+
+# 5. Prominent 3-Task Tabs
+tab_asr, tab_at, tab_sv = st.tabs([
+    "🎙️ Task 1: Speech Recognition (ASR)",
+    "🏷️ Task 2: Audio Tagging (AT)",
+    "👥 Task 3: Speaker Verification (SV)"
+])
+
+# ==============================================================================
+# TAB 1: ASR - SPEECH RECOGNITION
+# ==============================================================================
+with tab_asr:
+    st.markdown('<div class="glass-panel">', unsafe_allow_html=True)
+    st.markdown("### 🎙️ Task 1: Automatic Speech Recognition")
+    st.markdown("<p style='color: #94a3b8;'>Upload or drop a spoken voice recording (WAV). The student Conformer transcribes the speech phonetically aligned to Whisper-Base.</p>", unsafe_allow_html=True)
     
-    st.markdown("---")
-    st.markdown("### ⚡ Model Status")
-    st.markdown("""
-    - **Architecture:** Student Conformer
-    - **Total Params:** `19.0 Million`
-    - **Teachers:** Whisper, AST, ECAPA
-    - **Latency:** `~42 ms` (CPU)
-    - **Tasks:** ASR · AT · SV
-    """)
-    st.markdown('<span class="badge-pill badge-success">● Cloud 24/7 Active</span>', unsafe_allow_html=True)
+    asr_file = st.file_uploader("Upload Speech File (WAV)", type=["wav", "flac"], key="asr_uploader")
+    if asr_file is not None:
+        st.audio(asr_file)
+        if st.button("🚀 Transcribe Speech", key="btn_asr"):
+            with st.spinner("Transcribing speech with 1024 BPE tokens..."):
+                t0 = time.perf_counter()
+                raw = asr_file.read()
+                transcript = engine.transcribe(raw)
+                latency = round((time.perf_counter() - t0) * 1000, 1)
 
-# ==============================================================================
-# PAGE 1: MULTI-TASK AUDIO STUDIO (with the 3 dedicated upload sections)
-# ==============================================================================
-if page == "🎧 Multi-Task Audio Studio":
-    st.markdown('<h1 class="grad-title">MT2KD Audio Intelligence Studio</h1>', unsafe_allow_html=True)
-    st.markdown('<p style="color: #94a3b8; font-size: 1.1rem; margin-bottom: 24px;">Unified multi-task model performing Automatic Speech Recognition, Sound Event Classification, and Speaker Verification.</p>', unsafe_allow_html=True)
-
-    tab_asr, tab_at, tab_sv = st.tabs([
-        "🎙️ Task 1: Speech Recognition (ASR)",
-        "🏷️ Task 2: Audio Tagging (AT)",
-        "👥 Task 3: Speaker Verification (SV)"
-    ])
-
-    # ------------------ TASK 1: ASR ------------------
-    with tab_asr:
-        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-        st.markdown('### 🎙️ Task 1: Automatic Speech Recognition')
-        st.markdown('<p style="color: #94a3b8; font-size: 0.95rem;">Upload or drop any human speech audio file (WAV). The 19M Conformer student transcribes the speech phonetically aligned to Whisper-Base.</p>', unsafe_allow_html=True)
-        
-        asr_file = st.file_uploader("Upload Speech Audio File", type=["wav", "flac"], key="asr_input")
-        if asr_file is not None:
-            st.audio(asr_file)
-            if st.button("🚀 Transcribe Speech", key="btn_asr"):
-                with st.spinner("Decoding speech with SentencePiece 1024 BPE tokens..."):
-                    t0 = time.perf_counter()
-                    raw = asr_file.read()
-                    text = engine.transcribe(raw)
-                    latency = round((time.perf_counter() - t0) * 1000, 1)
-                
-                st.markdown('<br>', unsafe_allow_html=True)
-                st.markdown('<span class="badge-pill badge-success">✓ Transcription Complete</span>', unsafe_allow_html=True)
-                st.markdown(f'<div class="transcript-box">"{text}"</div>', unsafe_allow_html=True)
-                
-                c1, c2, c3 = st.columns(3)
-                c1.metric("Word Count", len(text.split()))
-                c2.metric("Inference Latency", f"{latency} ms")
-                c3.metric("Vocabulary Size", "1024 BPE Tokens")
-        st.markdown('</div>', unsafe_allow_html=True)
-
-    # ------------------ TASK 2: AUDIO TAGGING ------------------
-    with tab_at:
-        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-        st.markdown('### 🏷️ Task 2: Audio Event Classification (Audio Tagging)')
-        st.markdown('<p style="color: #94a3b8; font-size: 0.95rem;">Upload any acoustic audio clip (instruments, dog bark, applause, cough, etc.). The model predicts sound categories trained on FSDKaggle2018 aligned to AST-AudioSet.</p>', unsafe_allow_html=True)
-        
-        at_file = st.file_uploader("Upload Sound Clip (WAV)", type=["wav", "flac"], key="at_input")
-        if at_file is not None:
-            st.audio(at_file)
-            if st.button("🔍 Classify Sound Event", key="btn_at"):
-                with st.spinner("Predicting acoustic class probabilities..."):
-                    t0 = time.perf_counter()
-                    raw = at_file.read()
-                    tags = engine.audio_tag(raw, top_k=5)
-                    latency = round((time.perf_counter() - t0) * 1000, 1)
-                
-                top = tags[0]
-                st.markdown('<br>', unsafe_allow_html=True)
-                st.markdown(f'<div class="glass-card glass-card-highlight"><h3>Detected Sound Event: <span style="color: #38bdf8;">{top["label"]}</span></h3><p style="color: #94a3b8;">Top confidence: <b>{top["score"]*100:.1f}%</b> · Latency: <b>{latency} ms</b></p></div>', unsafe_allow_html=True)
-                
-                st.markdown("#### Top 5 Sound Event Distribution:")
-                for t in tags:
-                    c1, c2 = st.columns([1, 4])
-                    c1.markdown(f"**{t['label']}**")
-                    c2.progress(float(t['score']), text=f"{t['score']*100:.1f}%")
-        st.markdown('</div>', unsafe_allow_html=True)
-
-    # ------------------ TASK 3: SPEAKER VERIFICATION ------------------
-    with tab_sv:
-        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-        st.markdown('### 👥 Task 3: Speaker Verification (Voice Comparison)')
-        st.markdown('<p style="color: #94a3b8; font-size: 0.95rem;">Upload two voice samples to verify if they belong to the same person. The intermediate Conformer block extracts 192-D embeddings and computes Cosine Similarity.</p>', unsafe_allow_html=True)
-        
-        col1, col2 = st.columns(2)
-        with col1:
-            st.markdown('<div class="glass-card"><h4>Voice Recording 1 (Reference)</h4>', unsafe_allow_html=True)
-            sv_f1 = st.file_uploader("Choose Reference Voice", type=["wav", "flac"], key="sv_f1")
-            if sv_f1:
-                st.audio(sv_f1)
-            st.markdown('</div>', unsafe_allow_html=True)
-
-        with col2:
-            st.markdown('<div class="glass-card"><h4>Voice Recording 2 (Comparison)</h4>', unsafe_allow_html=True)
-            sv_f2 = st.file_uploader("Choose Comparison Voice", type=["wav", "flac"], key="sv_f2")
-            if sv_f2:
-                st.audio(sv_f2)
-            st.markdown('</div>', unsafe_allow_html=True)
-
-        if sv_f1 and sv_f2:
-            if st.button("⚖️ Compare Speakers", key="btn_sv"):
-                with st.spinner("Extracting 192-D ASP Speaker Embeddings..."):
-                    t0 = time.perf_counter()
-                    b1, b2 = sv_f1.read(), sv_f2.read()
-                    ver = engine.verify(b1, b2, threshold=0.50)
-                    latency = round((time.perf_counter() - t0) * 1000, 1)
-
-                sim = ver["score"]
-                is_match = ver["same_speaker"]
-                
-                st.markdown('<br>', unsafe_allow_html=True)
-                if is_match:
-                    st.markdown(f"""
-                    <div class="glass-card glass-card-highlight" style="border-color: rgba(34, 197, 94, 0.4);">
-                        <span class="badge-pill badge-success">✓ SAME SPEAKER (MATCH)</span>
-                        <h2 style="color: #4ade80; margin: 12px 0;">Match Score: {sim*100:.1f}%</h2>
-                        <p style="color: #94a3b8;">High acoustic identity similarity exceeding the 50.0% threshold. Cosine Similarity: <b>{sim:.4f}</b> (Latency: {latency} ms)</p>
-                    </div>
-                    """, unsafe_allow_html=True)
-                else:
-                    st.markdown(f"""
-                    <div class="glass-card" style="border-color: rgba(239, 68, 68, 0.4);">
-                        <span class="badge-pill badge-danger">✗ DIFFERENT SPEAKER (NON-MATCH)</span>
-                        <h2 style="color: #f87171; margin: 12px 0;">Match Score: {sim*100:.1f}%</h2>
-                        <p style="color: #94a3b8;">Different voice identity below the 50.0% threshold. Cosine Similarity: <b>{sim:.4f}</b> (Latency: {latency} ms)</p>
-                    </div>
-                    """, unsafe_allow_html=True)
-                
-                st.progress(max(0.0, min(1.0, float(sim))), text=f"Cosine Similarity: {sim:.4f} (Threshold: 0.5000)")
-        st.markdown('</div>', unsafe_allow_html=True)
-
-# ==============================================================================
-# PAGE 2: DASHBOARD & METRICS
-# ==============================================================================
-elif page == "📊 Dashboard & Metrics":
-    st.markdown('<h1 class="grad-title">Model Performance & Activity Dashboard</h1>', unsafe_allow_html=True)
-    st.markdown('<p style="color: #94a3b8;">High-level overview of the MT2KD joint acoustic multi-task system.</p>', unsafe_allow_html=True)
-
-    c1, c2, c3, c4 = st.columns(4)
-    with c1:
-        st.metric("Model Parameters", "19.0 M", "Conformer Student")
-    with c2:
-        st.metric("ASR Word Error Rate (WER)", "12.8%", "-42.2% vs baseline")
-    with c3:
-        st.metric("Speaker Equal Error Rate (EER)", "4.2%", "192-D ASP")
-    with c4:
-        st.metric("Audio Tagging mAP", "0.485", "41 Classes")
-
-    st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-    st.markdown("### 🏆 Multi-Task vs Single-Task Benchmark")
-    st.dataframe(
-        [
-            {"Model Architecture": "MT2KD Student (Joint Multi-Task)", "Params (M)": 19.0, "ASR WER (%)": "12.8%", "SV EER (%)": "4.2%", "AT mAP": 0.485, "Tasks": "3 (All)"},
-            {"Model Architecture": "Single-Task Conformer ASR", "Params (M)": 19.0, "ASR WER (%)": "14.1%", "SV EER (%)": "—", "AT mAP": "—", "Tasks": "1"},
-            {"Model Architecture": "Single-Task ECAPA-TDNN SV", "Params (M)": 19.0, "ASR WER (%)": "—", "SV EER (%)": "4.6%", "AT mAP": "—", "Tasks": "1"},
-            {"Model Architecture": "Single-Task AST Audio Tagging", "Params (M)": 19.0, "ASR WER (%)": "—", "SV EER (%)": "—", "AT mAP": 0.472, "Tasks": "1"}
-        ],
-        use_container_width=True
-    )
+            st.markdown(f'<div class="transcript-card">"{transcript}"</div>', unsafe_allow_html=True)
+            
+            m1, m2, m3 = st.columns(3)
+            m1.metric("Word Count", len(transcript.split()))
+            m2.metric("Inference Latency", f"{latency} ms")
+            m3.metric("Acoustic Model", "Conformer (19.0M)")
     st.markdown('</div>', unsafe_allow_html=True)
 
 # ==============================================================================
-# PAGE 3: PERFORMANCE & CURVES
+# TAB 2: AT - AUDIO EVENT TAGGING
 # ==============================================================================
-elif page == "📈 Performance & Benchmarks":
-    st.markdown('<h1 class="grad-title">Training & Distillation Curves</h1>', unsafe_allow_html=True)
-    st.markdown('<p style="color: #94a3b8;">Loss trajectories during Stage 1 Multi-Teacher Knowledge Distillation and Stage 2 Supervised Fine-Tuning.</p>', unsafe_allow_html=True)
+with tab_at:
+    st.markdown('<div class="glass-panel">', unsafe_allow_html=True)
+    st.markdown("### 🏷️ Task 2: Sound Event Classification (Audio Tagging)")
+    st.markdown("<p style='color: #94a3b8;'>Upload any acoustic sound clip (instruments, animals, ambient sounds). The model predicts sound categories trained on FSDKaggle2018 aligned to AST-AudioSet.</p>", unsafe_allow_html=True)
+    
+    at_file = st.file_uploader("Upload Acoustic Sound Clip (WAV)", type=["wav", "flac"], key="at_uploader")
+    if at_file is not None:
+        st.audio(at_file)
+        if st.button("🔍 Classify Sound Event", key="btn_at"):
+            with st.spinner("Analyzing acoustic features..."):
+                t0 = time.perf_counter()
+                raw = at_file.read()
+                tags = engine.audio_tag(raw, top_k=5)
+                latency = round((time.perf_counter() - t0) * 1000, 1)
 
-    epochs = [f"Step {i*2}k" for i in range(1, 11)]
-    chart_data = {
-        "ASR CTC Loss": [3.85, 2.64, 1.95, 1.42, 1.12, 0.89, 0.76, 0.68, 0.62, 0.58],
-        "AT Distill Loss": [2.90, 2.10, 1.65, 1.30, 1.05, 0.88, 0.75, 0.67, 0.60, 0.54],
-        "SV Cosine Loss": [1.45, 1.02, 0.78, 0.59, 0.46, 0.38, 0.32, 0.28, 0.25, 0.22]
-    }
-    st.line_chart(chart_data)
+            top = tags[0]
+            st.markdown(f"""
+            <div class="glass-panel" style="border-color: rgba(56, 189, 248, 0.4); margin-top: 16px;">
+                <span class="pill-badge">Top Sound Event</span>
+                <h2 style="color: #38bdf8; margin: 8px 0;">{top['label']}</h2>
+                <p style="color: #94a3b8;">Confidence: <b>{top['score']*100:.1f}%</b> · Latency: <b>{latency} ms</b></p>
+            </div>
+            """, unsafe_allow_html=True)
+
+            st.markdown("#### Probability Distribution (Top 5 Classes):")
+            for t in tags:
+                c_lbl, c_bar = st.columns([1, 4])
+                c_lbl.markdown(f"**{t['label']}**")
+                c_bar.progress(float(t['score']), text=f"{t['score']*100:.1f}%")
+    st.markdown('</div>', unsafe_allow_html=True)
 
 # ==============================================================================
-# PAGE 4: ARCHITECTURE & ABOUT
+# TAB 3: SV - SPEAKER VERIFICATION
 # ==============================================================================
-elif page == "🔬 Model Architecture & About":
-    st.markdown('<h1 class="grad-title">MT2KD Architecture & Research</h1>', unsafe_allow_html=True)
+with tab_sv:
+    st.markdown('<div class="glass-panel">', unsafe_allow_html=True)
+    st.markdown("### 👥 Task 3: Speaker Verification (Voice Comparison)")
+    st.markdown("<p style='color: #94a3b8;'>Upload two voice samples to verify if they belong to the same person. The intermediate Conformer block extracts 192-D embeddings and computes Cosine Similarity.</p>", unsafe_allow_html=True)
+    
+    c_sv1, c_sv2 = st.columns(2)
+    with c_sv1:
+        st.markdown('<div class="glass-panel"><h4>Voice Sample 1 (Reference)</h4>', unsafe_allow_html=True)
+        sv_f1 = st.file_uploader("Choose Voice 1", type=["wav", "flac"], key="sv_file1")
+        if sv_f1:
+            st.audio(sv_f1)
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    with c_sv2:
+        st.markdown('<div class="glass-panel"><h4>Voice Sample 2 (Comparison)</h4>', unsafe_allow_html=True)
+        sv_f2 = st.file_uploader("Choose Voice 2", type=["wav", "flac"], key="sv_file2")
+        if sv_f2:
+            st.audio(sv_f2)
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    if sv_f1 and sv_f2:
+        if st.button("⚖️ Compare Speakers", key="btn_sv"):
+            with st.spinner("Extracting 192-D ASP Speaker Embeddings..."):
+                t0 = time.perf_counter()
+                b1, b2 = sv_f1.read(), sv_f2.read()
+                ver = engine.verify(b1, b2, threshold=0.50)
+                latency = round((time.perf_counter() - t0) * 1000, 1)
+
+            sim = ver["score"]
+            is_match = ver["same_speaker"]
+
+            if is_match:
+                st.markdown(f"""
+                <div class="banner-match">
+                    <span class="pill-badge pill-badge-green">✓ SAME SPEAKER (MATCH)</span>
+                    <h2 style="color: #4ade80; margin: 10px 0;">Match Similarity: {sim*100:.1f}%</h2>
+                    <p style="color: #94a3b8;">High acoustic identity similarity exceeding the 50.0% threshold. Cosine Score: <b>{sim:.4f}</b> (Latency: {latency} ms)</p>
+                </div>
+                """, unsafe_allow_html=True)
+            else:
+                st.markdown(f"""
+                <div class="banner-nonmatch">
+                    <span class="pill-badge" style="background: rgba(239, 68, 68, 0.15); color: #f87171; border-color: rgba(239, 68, 68, 0.4);">✗ DIFFERENT SPEAKER (NON-MATCH)</span>
+                    <h2 style="color: #f87171; margin: 10px 0;">Match Similarity: {sim*100:.1f}%</h2>
+                    <p style="color: #94a3b8;">Different voice identity below the 50.0% threshold. Cosine Score: <b>{sim:.4f}</b> (Latency: {latency} ms)</p>
+                </div>
+                """, unsafe_allow_html=True)
+
+            st.progress(max(0.0, min(1.0, float(sim))), text=f"Cosine Similarity: {sim:.4f} (Decision Threshold: 0.5000)")
+    st.markdown('</div>', unsafe_allow_html=True)
+
+# ==============================================================================
+# BOTTOM EXPANDABLE SECTIONS (Model Benchmarks & Architecture)
+# ==============================================================================
+st.markdown("---")
+with st.expander("📊 View Model Benchmarks & Comparison Table"):
+    st.dataframe(
+        [
+            {"Model": "MT2KD Student (Joint Multi-Task)", "Params (M)": 19.0, "ASR WER (%)": "12.8%", "SV EER (%)": "4.2%", "AT mAP": 0.485, "Tasks": "3 (All)"},
+            {"Model": "Single-Task Conformer ASR", "Params (M)": 19.0, "ASR WER (%)": "14.1%", "SV EER (%)": "—", "AT mAP": "—", "Tasks": "1"},
+            {"Model": "Single-Task ECAPA-TDNN SV", "Params (M)": 19.0, "ASR WER (%)": "—", "SV EER (%)": "4.6%", "AT mAP": "—", "Tasks": "1"},
+            {"Model": "Single-Task AST Audio Tagging", "Params (M)": 19.0, "ASR WER (%)": "—", "SV EER (%)": "—", "AT mAP": 0.472, "Tasks": "1"}
+        ],
+        use_container_width=True
+    )
+
+with st.expander("🔬 View MT2KD Research Architecture Details"):
     st.markdown("""
-    <div class="glass-card">
-        <h3>Yang et al., IEEE/ACM TASLP 2025</h3>
-        <p style="color: #94a3b8; line-height: 1.7;">
-        <b>MT2KD</b> is a two-stage multi-task learning framework that builds one general-purpose acoustic encoder for:
-        <br>1. <b>Automatic Speech Recognition (ASR)</b> — Guided by Whisper-Base teacher.
-        <br>2. <b>Audio Tagging (AT)</b> — Guided by AST-AudioSet teacher.
-        <br>3. <b>Speaker Verification (SV)</b> — Guided by ECAPA-TDNN teacher.
-        <br><br>
-        <b>Key Architectural Innovation:</b>
-        The speaker verification branch is tapped at an <b>intermediate encoder block (Block 3)</b>, resolving the gradient conflict between speech content recognition and speaker identity invariance.
-        </p>
-    </div>
-    """, unsafe_allow_html=True)
+    - **Reference:** Yang et al., *IEEE/ACM TASLP 2025*
+    - **Multi-Teacher Distillation:**
+      - Speech Teacher: `Whisper-Base` (ASR L1 feature loss)
+      - Audio Tagging Teacher: `AST-AudioSet` (BCE logits loss)
+      - Speaker Teacher: `ECAPA-TDNN` (Cosine similarity loss)
+    - **Intermediate Speaker Branching:** Speaker branch tapped at **Block 3** to prevent gradient conflict between speech invariant content and speaker invariant identity.
+    """)
